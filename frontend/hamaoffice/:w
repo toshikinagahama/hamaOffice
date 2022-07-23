@@ -1,0 +1,251 @@
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useState, useEffect, useRef } from 'react';
+import { userState } from '../../components/atoms';
+import { useRecoilState } from 'recoil';
+import { domain_db, http_protcol, ws_protcol } from '../../global';
+import { FaUser } from 'react-icons/fa';
+import { isMobile } from 'react-device-detect';
+import Auth from '../../components/auth';
+import MyNav from '../../components/nav';
+
+export default function Room(pageProps) {
+  const router = useRouter();
+  const [user, setUser] = useRecoilState(userState);
+  const [room_users, setRoom_users] = useState([]);
+  const socketRef = useRef();
+  const refRoom_users = useRef([]);
+  const refMessageObjs = useRef([]);
+  const room_id = router.query.id;
+  const [peer_con, setPerr_con] = useState(null);
+
+  const [isFetchData, setIsFetchData] = useState(false);
+  const [room, setRoom] = useState([]);
+
+  function prepareNewConnection() {
+    let pc_config = { iceServers: [] };
+    let peer = new RTCPeerConnection(pc_config);
+
+    // --- on get remote stream ---
+    if ('ontrack' in peer) {
+      peer.ontrack = function (event) {
+        console.log('-- peer.ontrack()');
+        let stream = event.streams[0];
+        var source = audioctx.createMediaStreamSource(stream);
+        //source.connect(panner).connect(audioctx.destination);
+        //panner.positionX.value = -10;
+        //playVideo(remoteVideo, stream);
+      };
+    } else {
+      //peer.onaddstream = function (event) {
+      //  console.log('-- peer.onaddstream()');
+      //  let stream = event.stream;
+      //  playVideo(remoteVideo, stream);
+      //};
+    }
+
+    // --- on get local ICE candidate
+    peer.onicecandidate = function (evt) {
+      if (evt.candidate) {
+        //console.log(evt.candidate);
+        // Trickle ICE の場合は、ICE candidateを相手に送る
+        // Vanilla ICE の場合には、何もしない
+      } else {
+        //console.log('empty ice event');
+        //console.log(peer.localDescription);
+      }
+    };
+
+    let localStream;
+    // -- add local stream --
+    if (localStream) {
+      //console.log('Adding local stream...');
+      peer.addStream(localStream);
+    } else {
+      //console.warn('no local stream, but continue.');
+    }
+
+    return peer;
+  }
+
+  useEffect(async () => {
+    // if (socketRef.current != null) return;
+    const token = localStorage.getItem('token');
+    socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
+    navigator.getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia;
+    RTCPeerConnection =
+      window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    RTCSessionDescription =
+      window.RTCSessionDescription ||
+      window.webkitRTCSessionDescription ||
+      window.mozRTCSessionDescription;
+    let pc = prepareNewConnection();
+    let dataChannelOptions = {
+      ordered: false,
+    };
+    let dataChannel = pc.createDataChannel('test-data-channel', dataChannelOptions);
+    pc.createOffer()
+      .then(function (sessionDescription) {
+        //console.log('createOffer() succsess in promise');
+        return pc.setLocalDescription(sessionDescription);
+      })
+      .then(function () {
+        //console.log('setLocalDescription() succsess in promise');
+        // -- Trickle ICE の場合は、初期SDPを相手に送る --
+        // -- Vanilla ICE の場合には、まだSDPは送らない --
+        //sendSdp(peerConnection.localDescription);
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+
+    socketRef.current.addEventListener('open', function (e) {
+      socketRef.current.send(JSON.stringify({ command: 0, data: { token } }));
+    });
+
+    // サーバーからデータを受け取る
+    socketRef.current.addEventListener('message', function (e) {
+      try {
+        const json_data = JSON.parse(e.data);
+        const command = json_data['command'];
+        if (command != null) {
+          switch (command) {
+            case 0:
+              console.log(e.data);
+              socketRef.current.send(JSON.stringify({ command: 2 }));
+              break;
+            case 1:
+              console.log(json_data['message']);
+              const m = json_data['message'];
+              let tmp_user = refRoom_users.current.filter((u) => u.id === m.user_id);
+              tmp_user = tmp_user[0];
+              if (tmp_user != null) {
+                let m_new = {
+                  text: m.text,
+                  from_id: tmp_user.id,
+                  from: tmp_user.name,
+                  icon: tmp_user.icon,
+                  timestamp: new Date(),
+                };
+              } else {
+                console.log('no valid user');
+              }
+
+              // setMessages([...refMessages.current, json_data['data']]);
+              // console.log(refMessages.current);
+              break;
+            default:
+              consolen.log(json_data);
+              break;
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    return () => {
+      console.log('Disconnecting..');
+      socketRef.current.close();
+      // removeListeners?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user == null) {
+      return;
+    }
+
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
+      if (!isFetchData) {
+        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            room_ids: [room_id],
+          }),
+        }).catch(() => null);
+        if (res != null) {
+          const json_data = await res.json().catch(() => null);
+          // console.log(json_data);
+          if (json_data['result'] != null) {
+            if (json_data['result'] === 0) {
+              setIsFetchData(true);
+              const res_rooms = json_data['rooms'];
+              setRoom(res_rooms[0]);
+
+              res = await fetch(`${http_protcol}://${domain_db}/restricted/get_roomusers`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  room_id: room_id,
+                }),
+              }).catch(() => null);
+              if (res != null) {
+                const json_data = await res.json().catch(() => null);
+                // console.log(json_data);
+                setRoom_users(json_data['users']);
+                const tmp_room_users = json_data['users'];
+                res = await fetch(`${http_protcol}://${domain_db}/restricted/get_messages`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    room_ids: [room_id],
+                  }),
+                }).catch(() => null);
+                if (res != null) {
+                }
+              }
+
+              // console.log(res_rooms);
+            }
+          }
+        }
+      }
+    };
+    fetchData();
+  }, [room, user, room_users]);
+
+  useEffect(() => {
+    refRoom_users.current = [...room_users];
+  }, [room_users]);
+
+  return (
+    <Auth>
+      {user == null ? (
+        <div>loading</div>
+      ) : (
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen w-screen">
+          <Head>
+            <title>部屋一覧</title>
+            <meta httpEquiv="cache-control" content="no-cache" />
+            <meta httpEquiv="expires" content="0" />
+            <meta httpEquiv="pragma" content="no-cache" />
+          </Head>
+
+          <MyNav title={room.name} />
+          <div className="m-4"></div>
+
+          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-slate-50 bg-opacity-40 pt-4 pb-40">
+            a
+          </main>
+        </div>
+      )}
+    </Auth>
+  );
+}

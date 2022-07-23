@@ -1,0 +1,15 @@
+{
+  "go.inferGopath": false,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "hamaoffice_db",
+      "database": "hamaoffice_db",
+      "username": "postgres",
+      "password": "postgres"
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 3.81
+# Copyright (C) 2006  Free Software Foundation, Inc.
+# This is free software; see the source for copying conditions.
+# There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+# This program built for i386-apple-darwin11.3.0
+ 
+make: *** No rule to make target `all'.  Stop.
+
+
+# Make data base, printed on Sat Jul 23 19:31:49 2022
+
+# Variables
+
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+ 
+PIPENV_PYTHON = /Users/toshikinagahama/.pyenv/shims/python
+# automatic
+?F = $(notdir $?)
+# environment
+GOENV_ROOT = /Users/toshikinagahama/.goenv
+# environment
+LC_CTYPE = en_US.UTF-8
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+PLATFORMIO_IDE = 2.5.0
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# automatic
+@F = $(notdir $@)
+# makefile
+CURDIR := /Users/toshikinagahama/Workspace/Application/projects/hamaOffice
+# makefile
+SHELL = /bin/sh
+# environment
+VSCODE_NLS_CONFIG = {"locale":"ja","availableLanguages":{"*":"ja"},"_languagePackId":"29207410cd77a70b4b25e4878dda93be.ja","_translationsConfigFile":"/Users/toshikinagahama/Library/Application Support/Code/clp/29207410cd77a70b4b25e4878dda93be.ja/tcf.json","_cacheRoot":"/Users/toshikinagahama/Library/Application Support/Code/clp/29207410cd77a70b4b25e4878dda93be.ja","_resolvedLanguagePackCoreLocation":"/Users/toshikinagahama/Library/Application Support/Code/clp/29207410cd77a70b4b25e4878dda93be.ja/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a","_corruptedFile":"/Users/toshikinagahama/Library/Application Support/Code/clp/29207410cd77a70b4b25e4878dda93be.ja/corrupted.info","_languagePackSupport":true}
+# environment
+_ = /usr/bin/make
+# makefile
+MAKEFILE_LIST := 
+# environment
+GOENV_SHELL = fish
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+__CFBundleIdentifier = com.microsoft.VSCode
+# environment
+VSCODE_CWD = /
+# environment
+GOPROXY = https://proxy.golang.org,direct
+# environment
+NO_PROXY = 127.0.0.1
+# environment
+GOPATH = /Users/toshikinagahama/go
+# environment
+LaunchInstanceID = 302B95F5-845F-40A6-8F77-6C989D07BDA4
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+PYENV_ROOT = /Users/toshikinagahama/.pyenv/shims
+# default
+.FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
+# environment
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.qRkgql0w3G/Listeners
+# automatic
+%F = $(notdir $%)
+# environment
+PWD = /Users/toshikinagahama/Workspace/Application/projects/hamaOffice
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = undefined
+# environment
+GOMODCACHE = /Users/toshikinagahama/go/pkg/mod
+# environment
+PYENV_SHELL = fish
+# environment
+HOME = /Users/toshikinagahama
+# default
+MAKEFILEPATH := /Applications/Xcode.app/Contents/Developer/Makefiles
+# environment
+VSCODE_CODE_CACHE_PATH = /Users/toshikinagahama/Library/Application Support/Code/CachedData/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a
+# environment
+LOGNAME = toshikinagahama
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+PLATFORMIO_PATH = /Users/toshikinagahama/.platformio/penv/bin:/Users/toshikinagahama/.platformio/penv:/Users/toshikinagahama/.platformio/python3/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+PATH = /Users/toshikinagahama/.goenv/versions/1.17.6/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
+# environment
+SHLVL = 2
+# environment
+XPC_FLAGS = 0x0
+# default
+MAKE_VERSION := 3.81
+# environment
+USER = toshikinagahama
+# makefile
+.DEFAULT_GOAL := 
+# environment
+GOROOT = /Users/toshikinagahama/.goenv/versions/1.17.6
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# default
+MAKE_COMMAND := /Applications/Xcode.app/Contents/Developer/usr/bin/make
+# default
+.VARIABLES := 
+# environment
+TMPDIR = /var/folders/7b/2gy4bdl53_s8dhr7k4m4nfv80000gn/T/
+# automatic
+*F = $(notdir $*)
+# environment
+VSCODE_IPC_HOOK = /Users/toshikinagahama/Library/Application Support/Code/1.69.1-main.sock
+# environment
+MallocNanoZone = 0
+# makefile
+MAKEFLAGS = Rrqp
+# environment
+MFLAGS = -Rrqp
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+XPC_SERVICE_NAME = application.com.microsoft.VSCode.22367222.22367229
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# automatic
++F = $(notdir $+)
+# environment
+__CF_USER_TEXT_ENCODING = 0x1F5:0x1:0xE
+# environment
+COMMAND_MODE = unix2003
+# default
+MAKEFILES := 
+# automatic
+<F = $(notdir $<)
+# environment
+PLATFORMIO_CALLER = vscode
+# environment
+EDITOR = nvim
+# environment
+LC_ALL = C
+# environment
+SECURITYSESSIONID = 186c4
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# environment
+ 
+MAKELEVEL := 0
+# environment
+LANG = C
+# environment
+TERM = xterm-256color
+# environment
+VSCODE_PID = 10199
+# variable set hash-table stats:
+# Load=75/1024=7%, Rehash=0, Collisions=6/95=6%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 16777231, inode 22122666): 13 files, no impossibilities.
+
+# 13 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+# Not a target:
+all:
+#  Command-line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has not been updated.
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/0=0%
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  A default, MAKEFILES, or -include/sinclude makefile.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/0=0%
+
+# Not a target:
+makefile:
+#  A default, MAKEFILES, or -include/sinclude makefile.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/0=0%
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+GNUmakefile:
+#  A default, MAKEFILES, or -include/sinclude makefile.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/0=0%
+
+# files hash-table stats:
+# Load=6/1024=1%, Rehash=0, Collisions=0/17=0%
+# VPATH Search Paths
+
+# No `vpath' search paths.
+
+# No general (`VPATH' variable) search path.
+
+# # of strings in strcache: 0
+# # of strcache buffers: 0
+# strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
+# strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
+
+# Finished Make data base on Sat Jul 23 19:31:49 2022
+
+ 

@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/toshikinagahama/Workspace/Application/projects/hamaOffice'
+make: Leaving directory `/Users/toshikinagahama/Workspace/Application/projects/hamaOffice'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
