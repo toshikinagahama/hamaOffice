@@ -1,0 +1,3 @@
+docker stop (docker ps | grep hamaoffice | awk '{print $1}')
+docker rm (docker ps -a | grep hamaoffice | awk '{print $1}')
+docker rmi (docker image ls | grep hamaoffice_hamaofficeapp_backend | awk '{print $3}')

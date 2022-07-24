@@ -6,18 +6,14 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
- 
-make: *** No rule to make target `all'.  Stop.
 
-
-# Make data base, printed on Sat Jul 23 19:31:49 2022
+# Make data base, printed on Mon Jul 25 07:23:23 2022
 
 # Variables
 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # environment
- 
 PIPENV_PYTHON = /Users/toshikinagahama/.pyenv/shims/python
 # automatic
 ?F = $(notdir $?)
@@ -92,7 +88,7 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # environment
-PLATFORMIO_PATH = /Users/toshikinagahama/.platformio/penv/bin:/Users/toshikinagahama/.platformio/penv:/Users/toshikinagahama/.platformio/python3/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
+PLATFORMIO_PATH = /Users/toshikinagahama/.platformio/python3/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
 # default
 MAKE = $(MAKE_COMMAND)
 # default
@@ -158,7 +154,6 @@ SECURITYSESSIONID = 186c4
 # default
 SUFFIXES := 
 # environment
- 
 MAKELEVEL := 0
 # environment
 LANG = C
@@ -175,9 +170,9 @@ VSCODE_PID = 10199
 
 # Directories
 
-# . (device 16777231, inode 22122666): 13 files, no impossibilities.
+# . (device 16777231, inode 22122666): 14 files, no impossibilities.
 
-# 13 files, no impossibilities in 1 directories.
+# 14 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -249,6 +244,8 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Sat Jul 23 19:31:49 2022
+# Finished Make data base on Mon Jul 25 07:23:23 2022
 
  
+make: *** No rule to make target `all'.  Stop.
+

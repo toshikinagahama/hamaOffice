@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     #image: hamaofficeapp_backend
     ports:
-      - 1323:1323
+      - 1324:1323
     restart: always
 
 volumes:

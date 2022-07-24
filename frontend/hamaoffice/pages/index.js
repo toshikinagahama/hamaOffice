@@ -101,7 +101,7 @@ export default function Home(pageProps) {
   return (
     <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen py-2 overflow-hidden">
       <Head>
-        <title>Simple Chat sample</title>
+        <title>Simple hamaoffice/ sample</title>
         <meta httpEquiv="cache-control" content="no-cache" />
         <meta httpEquiv="expires" content="0" />
         <meta httpEquiv="pragma" content="no-cache" />

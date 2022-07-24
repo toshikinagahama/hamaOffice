@@ -22,6 +22,7 @@ export default function Room(pageProps) {
   const [peer_con, setPerr_con] = useState(null);
   const refVideo = useRef(null);
   const refVideo2 = useRef(null);
+  const [active_users, setActive_users] = useState({}); //{user_id: {pos: {x:0, y:0, z: 0}, lookat: {x:0,y:0,z:0}, is_offer: boolean, peer: PeerConnection, panner: Panner}}
 
   const [isFetchData, setIsFetchData] = useState(false);
   const [room, setRoom] = useState([]);
@@ -52,7 +53,7 @@ export default function Room(pageProps) {
         let gainNode = audioctx.current.createGain();
         gainNode.gain.value = 1.0;
         let panner = new PannerNode(audioctx.current, { panningModel: 'HRTF' });
-        panner.positionX.value = 1.0;
+        panner.positionX.value = -1.0;
         source.connect(gainNode).connect(panner).connect(destination.current);
         audioctx.current.resume();
       };
@@ -122,9 +123,12 @@ export default function Room(pageProps) {
   }
 
   useEffect(async () => {
-    // if (socketRef.current != null) return;
+    if (user == null) {
+      return;
+    }
     const token = localStorage.getItem('token');
-    socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
+    if (socketRef.current == null)
+      socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
     navigator.getUserMedia =
       navigator.getUserMedia ||
       navigator.webkitGetUserMedia ||
@@ -142,22 +146,7 @@ export default function Room(pageProps) {
     //destination.current = audioctx.current.createMediaStreamDestination();
     getDeviceStream({ video: false, audio: true })
       .then(function (stream) {
-        // success
-        //console.log(stream);
         localStream.current = stream;
-        console.log(audioctx.current);
-        //refVideo2.current.srcObject = stream;
-        //let panner = new PannerNode(audioctx.current, { panningModel: 'HRTF' });
-        //let source = audioctx.current.createMediaStreamSource(stream);
-        //let gainNode = audioctx.current.createGain();
-        //panner.positionX.value = 0.1;
-        //gainNode.gain.value = 0.5;
-        //source.connect(gainNode).connect(panner).connect(destination.current);
-        //audioctx.current.resume();
-        //refVideo.current.srcObject = destination.current.stream;
-        //console.log(refVideo.current);
-
-        //refVideo.current.play();
       })
       .catch(function (error) {
         // error
@@ -166,7 +155,12 @@ export default function Room(pageProps) {
       });
 
     socketRef.current.addEventListener('open', function (e) {
-      socketRef.current.send(JSON.stringify({ command: 0, data: { token } }));
+      socketRef.current.send(JSON.stringify({ command: 100, data: { token } }));
+      const data = {
+        command: 0,
+        message: { room_id: room_id.current, user_id: user.id, text: '' },
+      };
+      socketRef.current.send(JSON.stringify(data));
     });
 
     // サーバーからデータを受け取る
@@ -178,26 +172,14 @@ export default function Room(pageProps) {
         if (command != null) {
           switch (command) {
             case 0:
+              console.log(json_data);
               break;
             case 1:
-              //console.log(json_data['message']);
               //const m = json_data['message'];
-              //let tmp_user = refRoom_users.current.filter((u) => u.id === m.user_id);
-              //tmp_user = tmp_user[0];
-              //if (tmp_user != null) {
               //  let m_new = {
               //    text: m.text,
               //    from_id: tmp_user.id,
-              //    from: tmp_user.name,
-              //    icon: tmp_user.icon,
-              //    timestamp: new Date(),
               //  };
-              //} else {
-              //  console.log('no valid user');
-              //}
-
-              // setMessages([...refMessages.current, json_data['data']]);
-              // console.log(refMessages.current);
               break;
             case 2:
               //接続要求された側の処理
@@ -259,7 +241,6 @@ export default function Room(pageProps) {
 
               break;
             case 4:
-              //console.log(pc.current);
               if (!pc.current) {
                 console.error('peerConnection NOT exist!');
                 return;
@@ -288,64 +269,12 @@ export default function Room(pageProps) {
       }
     });
 
+    refUser_id.current = user.id;
     return () => {
       console.log('Disconnecting..');
       socketRef.current.close();
       // removeListeners?.();
     };
-  }, []);
-
-  useEffect(() => {
-    if (user == null) {
-      return;
-    }
-
-    const fetchData = async () => {
-      const token = localStorage.getItem('token');
-      if (!isFetchData) {
-        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            room_ids: [room_id.current],
-          }),
-        }).catch(() => null);
-        if (res != null) {
-          const json_data = await res.json().catch(() => null);
-          // console.log(json_data);
-          if (json_data['result'] != null) {
-            if (json_data['result'] === 0) {
-              setIsFetchData(true);
-              const res_rooms = json_data['rooms'];
-              setRoom(res_rooms[0]);
-
-              res = await fetch(`${http_protcol}://${domain_db}/restricted/get_roomusers`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  room_id: room_id.current,
-                }),
-              }).catch(() => null);
-              if (res != null) {
-                const json_data = await res.json().catch(() => null);
-                // console.log(json_data);
-                setRoom_users(json_data['users']);
-              }
-
-              // console.log(res_rooms);
-            }
-          }
-        }
-      }
-    };
-    fetchData();
-    refUser_id.current = user.id;
   }, [user]);
 
   useEffect(() => {}, [user]);

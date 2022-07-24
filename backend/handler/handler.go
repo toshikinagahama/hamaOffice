@@ -132,7 +132,7 @@ func Websocket(c echo.Context) error {
 	log.Println("websocket authenticate end")
 	// クライアントを登録
 	clients[ws] = auth
-	err = ws.WriteJSON(echo.Map{"command": 0, "result": 0})
+	err = ws.WriteJSON(echo.Map{"result": 0})
 	// err = ws.WriteMessage(websocket.TextMessage, []byte("Hello Client"))
 	if err != nil {
 		log.Println(err)
@@ -148,6 +148,10 @@ func Websocket(c echo.Context) error {
 			break
 		}
 		switch res.Command {
+		case 0:
+			//アクティブユーザーの取得
+			broadcast <- res
+			break
 		case 1:
 			broadcast <- res
 			break
@@ -178,6 +182,22 @@ func WebsocketMessages() {
 				continue
 			}
 			switch res.Command {
+			case 0:
+				//アクティブユーザーを取得する
+				activeUserIDs := []uuid.UUID{}
+				for _, auth := range clients {
+					activeUserIDs = append(activeUserIDs, auth.UserID)
+				}
+				err := client.WriteJSON(echo.Map{
+					"command":         0,
+					"result":          0,
+					"active_user_ids": activeUserIDs})
+				if err != nil {
+					log.Printf("error: %v", err)
+					client.Close()
+					delete(clients, client)
+				}
+				break
 			case 1:
 				err := client.WriteJSON(echo.Map{
 					"command": 1,
