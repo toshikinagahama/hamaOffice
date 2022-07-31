@@ -4,9 +4,8 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
+import { getDeviceStream } from '../../func';
 import { domain_db, http_protcol, ws_protcol } from '../../global';
-import { FaUser } from 'react-icons/fa';
-import { isMobile } from 'react-device-detect';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
 
@@ -20,9 +19,8 @@ export default function Room(pageProps) {
   const room_id = useRef('');
   room_id.current = router.query.id;
   const [peer_con, setPerr_con] = useState(null);
-  const refVideo = useRef(null);
-  const refVideo2 = useRef(null);
-  const [active_users, setActive_users] = useState({}); //{user_id: {pos: {x:0, y:0, z: 0}, lookat: {x:0,y:0,z:0}, is_offer: boolean, peer: PeerConnection, panner: Panner}}
+  const [active_users, setActive_users] = useState({}); //{id: user_id, pos: {x:0, y:0, z: 0}, lookat: {x:0,y:0,z:0}, is_offer: boolean, peer: PeerConnection, panner: Panner}
+  const refActive_users = useRef([]);
 
   const [isFetchData, setIsFetchData] = useState(false);
   const [room, setRoom] = useState([]);
@@ -31,53 +29,48 @@ export default function Room(pageProps) {
   const panner = useRef(null);
   const pc = useRef(null);
   const localStream = useRef(null);
-  const offerOptions = {
-    offerToReceiveAudio: 1,
-    offerToReceiveVideo: 1,
-  };
 
-  function prepareNewConnection(command, to_user_id) {
+  function prepareNewConnection(command, to_user_id, panner) {
     let pc_config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-    //let pc_config = { offerToReceiveAudio: 1, offerToReceiveVideo: 1, iceServers: [] };
     let peer = new RTCPeerConnection(pc_config);
 
     peer.ontrack = function (event) {
       console.log('-- peer.ontrack(): track kind=' + event.track.kind);
       let stream = event.streams[0];
-      console.log(event);
       let audio = new Audio();
       audio.srcObject = stream;
       audio.onloadedmetadata = () => {
-        console.log('loaded audio');
         let source = audioctx.current.createMediaStreamSource(stream);
-        let gainNode = audioctx.current.createGain();
-        gainNode.gain.value = 1.0;
-        let panner = new PannerNode(audioctx.current, { panningModel: 'HRTF' });
-        panner.positionX.value = -1.0;
-        source.connect(gainNode).connect(panner).connect(destination.current);
+        source.connect(panner).connect(destination.current);
         audioctx.current.resume();
       };
     };
     if (localStream.current) {
-      console.log('Adding local stream...');
-      //console.log(localStream.current);
       localStream.current.getTracks().forEach(function (track) {
-        //console.log(track);
-        //peer.addTrack(track);
         peer.addTrack(track, localStream.current);
       });
-      //peer.addStream(localStream.current);
     } else {
       console.warn('no local stream, but continue.');
     }
 
+    peer.onconnectionstatechange = (evt) => {
+      switch (peer.connectionState) {
+        //case 'disconnected':
+        //  console.log('disconnected...');
+        //  break;
+        case 'closed':
+          console.log('closed...');
+          break;
+        default:
+          break;
+      }
+    };
+
     // --- on get local ICE candidate
     peer.onicecandidate = function (evt) {
       if (evt.candidate) {
-        //console.log(evt.candidate);
-        //peer.addIceCandidate(evt.candidate);
       } else {
-        console.log('empty ice event');
+        //console.log('empty ice event');
         //ここで、ICE candidateを含んだSDPを送らないといけなさそう。
         if (command == 2) {
           const data = {
@@ -110,25 +103,7 @@ export default function Room(pageProps) {
     return peer;
   }
 
-  function getDeviceStream(option) {
-    if ('getUserMedia' in navigator.mediaDevices) {
-      console.log('navigator.mediaDevices.getUserMadia');
-      return navigator.mediaDevices.getUserMedia(option);
-    } else {
-      console.log('wrap navigator.getUserMadia with Promise');
-      return new Promise(function (resolve, reject) {
-        navigator.getUserMedia(option, resolve, reject);
-      });
-    }
-  }
-
-  useEffect(async () => {
-    if (user == null) {
-      return;
-    }
-    const token = localStorage.getItem('token');
-    if (socketRef.current == null)
-      socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
+  const initMedia = () => {
     navigator.getUserMedia =
       navigator.getUserMedia ||
       navigator.webkitGetUserMedia ||
@@ -153,7 +128,30 @@ export default function Room(pageProps) {
         console.error('getUserMedia error:', error);
         return;
       });
+  };
 
+  // Data channel のイベントハンドラを定義する
+  function setupDataChannel(dc) {
+    dc.onerror = function (error) {
+      console.log('Data channel error:', error);
+    };
+    dc.onmessage = function (evt) {
+      console.log('Data channel message:', evt.data);
+      let msg = evt.data;
+    };
+    dc.onopen = function (evt) {
+      console.log('Data channel opened:', evt);
+    };
+    dc.onclose = function () {
+      console.log('Data channel closed.');
+    };
+  }
+
+  const initWebsocket = () => {
+    if (socketRef.current == null)
+      socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
+    else return;
+    const token = localStorage.getItem('token');
     socketRef.current.addEventListener('open', function (e) {
       socketRef.current.send(JSON.stringify({ command: 100, data: { token } }));
       const data = {
@@ -173,6 +171,34 @@ export default function Room(pageProps) {
           switch (command) {
             case 0:
               console.log(json_data);
+              const user_ids = json_data['active_user_ids'];
+              if (user_ids == null) {
+                console.log('No active users');
+                return;
+              }
+              //アクティブユーザーの設定（先に入室している方）
+              user_ids.map((user_id) => {
+                if (user_id != user.id) {
+                  let tmp_user = { id: user_id };
+                  // あとから入ったほうがanswerにする。
+                  tmp_user['is_offer'] = true;
+                  tmp_user['pos'] = { x: 0, y: 0, z: 0 };
+                  tmp_user['lookat'] = { x: 0, y: 0, z: 0 };
+                  tmp_user['panner'] = new PannerNode(audioctx.current, { panningModel: 'HRTF' });
+                  let text = 'offer';
+                  const data = {
+                    command: 2,
+                    message: {
+                      room_id: room_id.current,
+                      user_id: user.id,
+                      to_user_id: user_id,
+                      text: text,
+                    },
+                  };
+                  socketRef.current.send(JSON.stringify(data));
+                  refActive_users.current.push(tmp_user);
+                }
+              });
               break;
             case 1:
               //const m = json_data['message'];
@@ -182,25 +208,47 @@ export default function Room(pageProps) {
               //  };
               break;
             case 2:
-              //接続要求された側の処理
-              pc.current = prepareNewConnection(2, json_data['to_user_id']);
-              let dataChannelOptions = {
-                ordered: false,
-              };
-              let dataChannel = pc.current.createDataChannel(
-                'test-data-channel',
-                dataChannelOptions
-              );
-              pc.current
-                .createOffer(offerOptions)
-                .then(function (sessionDescription) {
-                  console.log('createOffer() succsess in promise');
-                  return pc.current.setLocalDescription(sessionDescription);
-                })
-                .then(function () {})
-                .catch(function (err) {
-                  console.error(err);
-                });
+              if (json_data['offer_or_answer'] == 'offer') {
+                //offerされたほう(先に入室している側)の処理
+                //目的のactiveuserのインデックスを調べ、すでに存在していたら、削除
+                let index = -1;
+                for (let i = 0; i < refActive_users.current.length; i++) {
+                  let tmp_user = refActive_users.current[i];
+                  if (tmp_user['id'] == json_data['from_user_id']) index = i;
+                }
+                if (index == -1) console.log('No connection');
+                else {
+                  //すでに存在していたら、いったん削除する。
+                  refActive_users.current.splice(index, 1);
+                  console.log(index);
+                }
+                let tmp_user = { id: json_data['from_user_id'] };
+                tmp_user['pos'] = { x: 0, y: 0, z: 0 };
+                tmp_user['lookat'] = { x: 0, y: 0, z: 0 };
+                tmp_user['panner'] = new PannerNode(audioctx.current, { panningModel: 'HRTF' });
+                tmp_user['is_offer'] = false;
+                let text = '';
+                if (tmp_user['is_offer']) text = 'offer';
+                else text = 'answer';
+                tmp_user['peer'] = prepareNewConnection(
+                  2,
+                  json_data['from_user_id'],
+                  tmp_user['panner']
+                );
+                tmp_user['channel'] = tmp_user['peer'].createDataChannel(json_data['from_user_id']);
+                setupDataChannel(tmp_user['channel']);
+                tmp_user['peer']
+                  .createOffer()
+                  .then(function (sessionDescription) {
+                    console.log('createOffer() succsess in promise');
+                    return tmp_user['peer'].setLocalDescription(sessionDescription);
+                  })
+                  .then(function () {})
+                  .catch(function (err) {
+                    console.error(err);
+                  });
+                refActive_users.current.push(tmp_user);
+              }
               break;
             case 3:
               //接続要求した側の処理
@@ -208,27 +256,41 @@ export default function Room(pageProps) {
                 type: 'offer',
                 sdp: json_data['message'],
               });
-              if (pc.current) {
+              //目的のactiveuserのインデックスを調べる
+              let index = -1;
+              for (let i = 0; i < refActive_users.current.length; i++) {
+                let tmp_user = refActive_users.current[i];
+                if (tmp_user['id'] == json_data['from_user_id']) index = i;
+              }
+              if (index == -1) console.log('Error in peerConnection');
+              if (refActive_users.current[index]['peer']) {
                 console.error('peerConnection alreay exist!');
               } else {
-                pc.current = prepareNewConnection(3, json_data['from_user_id']);
-                pc.current
+                refActive_users.current[index]['peer'] = prepareNewConnection(
+                  3,
+                  json_data['from_user_id'],
+                  refActive_users.current[index]['panner']
+                );
+                refActive_users.current[index]['peer']
                   .setRemoteDescription(offer)
                   .then(function () {
-                    console.log('setRemoteDescription(offer) succsess in promise');
-                    pc.current
+                    //console.log('setRemoteDescription(offer) succsess in promise');
+                    refActive_users.current[index]['peer']
                       .createAnswer()
                       .then(function (sessionDescription) {
-                        console.log('createAnswer() succsess in promise');
-                        pc.current.ondatachannel = function (evt) {
-                          //console.log('Data channel created:', evt);
-                          //setupDataChannel(evt.channel);
-                          //dataChannel = evt.channel;
+                        //console.log('createAnswer() succsess in promise');
+                        refActive_users.current[index]['peer'].ondatachannel = function (evt) {
+                          console.log('Data channel created:', evt);
+                          setupDataChannel(evt.channel);
+                          refActive_users.current[index]['channel'] = evt.channel;
+                          refActive_users.current[index]['channel'].send(user.id);
                         };
-                        return pc.current.setLocalDescription(sessionDescription);
+                        return refActive_users.current[index]['peer'].setLocalDescription(
+                          sessionDescription
+                        );
                       })
                       .then(function () {
-                        console.log('setLocalDescription() succsess in promise');
+                        //console.log('setLocalDescription() succsess in promise');
                       })
                       .catch(function (err) {
                         console.error(err);
@@ -241,7 +303,14 @@ export default function Room(pageProps) {
 
               break;
             case 4:
-              if (!pc.current) {
+              //目的のactiveuserのインデックスを調べる
+              index = -1;
+              for (let i = 0; i < refActive_users.current.length; i++) {
+                let tmp_user = refActive_users.current[i];
+                if (tmp_user['id'] == json_data['from_user_id']) index = i;
+              }
+              if (index == -1) console.log('Error in peerConnection');
+              if (!refActive_users.current[index]['peer']) {
                 console.error('peerConnection NOT exist!');
                 return;
               }
@@ -250,10 +319,10 @@ export default function Room(pageProps) {
                 sdp: json_data['message'],
               });
 
-              pc.current
+              refActive_users.current[index]['peer']
                 .setRemoteDescription(answer)
                 .then(function () {
-                  console.log('setRemoteDescription(answer) succsess in promise');
+                  //console.log('setRemoteDescription(answer) succsess in promise');
                 })
                 .catch(function (err) {
                   console.error('setRemoteDescription(answer) ERROR: ', err);
@@ -268,16 +337,21 @@ export default function Room(pageProps) {
         console.log(error);
       }
     });
+  };
+
+  useEffect(async () => {
+    if (user == null) {
+      return;
+    }
+
+    initMedia();
+    initWebsocket();
 
     refUser_id.current = user.id;
     return () => {
-      console.log('Disconnecting..');
-      socketRef.current.close();
-      // removeListeners?.();
+      socketRef.current.close(); //websocketのクローズ
     };
   }, [user]);
-
-  useEffect(() => {}, [user]);
 
   useEffect(() => {
     refRoom_users.current = [...room_users];
@@ -291,11 +365,6 @@ export default function Room(pageProps) {
     };
     console.log(data);
     socketRef.current.send(JSON.stringify(data));
-  };
-
-  const handleStartVoiceBtnClicked = (e) => {
-    audioctx.current.resume();
-    console.log('resume');
   };
 
   return (
@@ -316,25 +385,6 @@ export default function Room(pageProps) {
 
           <main className="flex flex-col items-center justify-start w-full flex-1 container bg-slate-50 bg-opacity-40 pt-4 pb-40">
             <button onClick={handleConnectBtnClicked}>接続</button>
-            <button onClick={handleStartVoiceBtnClicked}>音声開始</button>
-            <video
-              ref={refVideo}
-              autoPlay={true}
-              width={300}
-              height={200}
-              controls
-              className="border-gray-50"
-              style={{ width: '300px', height: '200px' }}
-            ></video>
-            <video
-              ref={refVideo2}
-              autoPlay={true}
-              width={300}
-              height={200}
-              controls
-              className="border-gray-50"
-              style={{ width: '300px', height: '200px' }}
-            ></video>
           </main>
         </div>
       )}

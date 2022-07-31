@@ -1,109 +1,114 @@
 # 本アプリケーションの概要
-本アプリケーションは、Lineのようなチャット機能を有する簡易チャットアプリである。
 
-ユーザー名とパスワード、そして、本アプリの開発者から教えてもらったsercret keyを用いて、ユーザー登録ができる。
+本アプリケーションは、WebRTC の技術を用いて、仮想空間上でのリアルな会話を成立させることを目的とする。
+
+ユーザー名とパスワード、そして、本アプリの開発者から教えてもらった sercret key を用いて、ユーザー登録ができる。
 
 ユーザーは、任意に部屋を作成できる。
 
-そこに他のユーザーを追加することで、チャットが可能となる。
+そこに他のユーザーを追加することで、仮想空間上での会話が可能となる。
 
 # ユースケース
+
 ユースケースは以下の通り。
 
 # シーケンス
+
 ## ログイン
+
 ## メッセージ送受信
+
 ## シグナリング
+
 ```mermaid
 sequenceDiagram
    participant user1 as user1
    participant user2 as user2
    participant server as server
-   user1 ->> server: アクティブユーザーの取得要求（一人）
-   server ->> user1:  アクティブユーザーidの返却
-   user1 ->> user1: peerconnection作成
-   user1 ->> user1: offer SDPの作成
-   user1 ->> user1: setLocalDescription
-   user1 ->> user1: リモートのメディアストリームの設定
-   user1 ->> server: 該当ユーザーにSDPの送信
-   server ->> user2: SDPの送信
-   user2 ->> user2: peerconnection作成
-   user2 ->> user2: setRemoteDescription
-   user2 ->> user2: answer SDPの作成
-   user2 ->> user2: setLocalDescription
-   user2 ->> server: 該当ユーザーにSDPの送信
-   server ->> user1: SDPの送信
-   
-   
+   user1 -->> server: アクティブユーザーの取得要求（一人）
+   server -->> user1:  アクティブユーザーidの返却
+   user1 -->> user1: peerconnection作成
+   user1 -->> user1: offer SDPの作成
+   user1 -->> user1: setLocalDescription
+   user1 -->> user1: リモートのメディアストリームの設定
+   user1 -->> server: 該当ユーザーにSDPの送信
+   server -->> user2: SDPの送信
+   user2 -->> user2: peerconnection作成
+   user2 -->> user2: setRemoteDescription
+   user2 -->> user2: answer SDPの作成
+   user2 -->> user2: setLocalDescription
+   user2 -->> server: 該当ユーザーにSDPの送信
+   server -->> user1: SDPの送信
+```
+
+## 人が増えた、減ったをどう判断するか
+
+- サーバー側が、websocket のコネクションを管理し、接続時、切断時にその情報をその部屋の人たちにブロードキャストする。
+
+## 入室後の処理
+
+```mermaid
+sequenceDiagram
+   participant user1 as user1
+   participant server as server
+   user1 -->> server: アクティブユーザー一覧取得
+   server -->> user1:  アクティブユーザーidリストの返却
+   user1 -->> user1: アクティブユーザーごとに接続処理（UUIDの大小でofferかanswerか決める）
+   server -->> user1: アクティブユーザーの位置情報に変更があったらをその情報を送信
+   user1 -->> user1: 位置情報をもとに音声を再構築
+
 
 ```
 
-# 機能一覧
-| 機能           | 説明                                                       | 備考 |
-| :------------- | ---------------------------------------------------------- | ---- |
-| ユーザー登録   | 任意の人間が<br>ユーザーを登録できる                       |      |
-| アイコン登録   | 登録済みユーザーが<br>自分のアイコンを登録できる           |      |
-| 部屋作成       | 登録済みユーザーが<br>部屋を作成できる                     |      |
-| 他ユーザー追加 | 登録済みユーザーが<br>自分の部屋に他のユーザーを追加できる |      |
-| メッセージ閲覧 | 登録済みユーザーが<br>自分の部屋のメッセージを閲覧できる   |      |
-| メッセージ送信 | 登録済みユーザーが<br>自分の部屋でメッセージを送信できる   |      |
-
 # 技術構成
+
 ## backend
-backendのwebサーバーはGo言語で作成した。
+
+backend の web サーバーは Go 言語で作成した。
 
 主な使用ライブラリは以下の通り。
-| 項目                         | 説明                                                                 | 備考                                |
+| 項目 | 説明 | 備考 |
 | ---------------------------- | :------------------------------------------------------------------- | ----------------------------------- |
-| github.com/labstack/echo     | webフレームワーク。                                                  |                                     |
-| Logger                       | ロガー。                                                             | github.com/labstack/echo/middleware |
-| Recover                      | パニックを起こしてもプログラムが<br>終了しないようにするmiddleware。 | github.com/labstack/echo/middleware |
-| JWTWithConfig                | jwt tokenで認証済みのページ<br>を作成するmiddleware。                | github.com/labstack/echo/middleware |
-| gorm.io/gorm                 | ORMライブラリ。                                                      |                                     |
-| github.com/spf13/viper       | 設定ファイルや環境変数を<br>簡単に扱えるライブラリ。                 |                                     |
-| github.com/gorilla/websocket | Websocketを<br>扱えるライブラリ。                                    |                                     |
-| golang.org/x/crypto/bcrypt   | パスワードをハッシュ化するライブラリ。                               |                                     |
+| github.com/labstack/echo | web フレームワーク。 | |
+| Logger | ロガー。 | github.com/labstack/echo/middleware |
+| Recover | パニックを起こしてもプログラムが<br>終了しないようにする middleware。 | github.com/labstack/echo/middleware |
+| JWTWithConfig | jwt token で認証済みのページ<br>を作成する middleware。 | github.com/labstack/echo/middleware |
+| gorm.io/gorm | ORM ライブラリ。 | |
+| github.com/spf13/viper | 設定ファイルや環境変数を<br>簡単に扱えるライブラリ。 | |
+| github.com/gorilla/websocket | Websocket を<br>扱えるライブラリ。 | |
+| golang.org/x/crypto/bcrypt | パスワードをハッシュ化するライブラリ。 | |
 
-## frontend
-frontendはNext.jsを用いて作成した。
-| 項目         | 説明                                                        | 備考 |
-| ------------ | :---------------------------------------------------------- | ---- |
-| Next.js      | Reactベースのwebフレームワーク。                            |      |
-| qrcode.react | URLから自動でQRコードの画像データ<br>を生成するライブラリ。 |      |
-| recoil       | グローバルに状態を管理する<br>ライブラリ。                  |      |
+## deploy 環境
 
-## database
-データベースはpostgresを使った。テーブルは以下の通り。
-![ER図](./imgs/ER.png)
+deploy 環境にも docker をインストールしておき、docker-compose を使って、postgres 及び backend アプリを container で起動させた。
 
-## deploy環境
-deploy環境にもdockerをインストールしておき、docker-composeを使って、postgres及びbackendアプリをcontainerで起動させた。
-
-このとき、port:1323でbackendアプリが起動するので、本番環境のWebサーバー（nginx）でリバースプロキシの設定をして、このアプリに接続するようにした。
+このとき、port:1323 で backend アプリが起動するので、本番環境の Web サーバー（nginx）でリバースプロキシの設定をして、このアプリに接続するようにした。
 
 # 1. ビルド手順
+
 ## ローカル環境での作業
+
 1. 本番環境か、開発環境かによって環境変数を変える。
-2. frontendアプリのbuild
+2. frontend アプリの build
    ```
    cd frontend/hamaoffice
    yarn build
    ```
    これによって、`frontend/hamaoffice/out`
-   フォルダに、buildされる。
-3. backendアプリのbuild
+   フォルダに、build される。
+3. backend アプリの build
    ```
     cd backend
     make build
    ```
    で`./bin/main` が出来上がる。
-4. frontendアプリでbuildされたoutフォルダをコピー。
+4. frontend アプリで build された out フォルダをコピー。
    ```
    cp -r ./frontend/hamaoffice/out/ ./backend/out/
    ```
 5. 本番（deploy）サーバーに必要なファイルをコピー。
    ```
-  hamaOffice 
+   hamaOffice
    ├──backend
    │     ├── Dockerfile
    │     ├── bin
@@ -131,15 +136,19 @@ deploy環境にもdockerをインストールしておき、docker-composeを使
    ├──docker-compose.yml
    └──.env
    ```
-## 本番サーバー側での作業
-6. containerの起動
-   上記でコピーしたフォルダhamaOffice内で、
-  ```
-  docker-compose up -d
-  ```
-  を実行し、containerを起動する。
 
-7. nginxの設定
+## 本番サーバー側での作業
+
+6. container の起動
+   上記でコピーしたフォルダ hamaOffice 内で、
+
+```
+docker-compose up -d
+```
+
+を実行し、container を起動する。
+
+7. nginx の設定
    ```
     location /hamaoffice {
       rewrite /hamaoffice/(.*) /$1 break;
@@ -151,13 +160,7 @@ deploy環境にもdockerをインストールしておき、docker-composeを使
    ```
    sudo nginx -s reload
    ```
-   でnginxをreloadすると、
+   で nginx を reload すると、
    https://hostname/hamaoffice/web
    でアクセスが可能となる。
-   ※websocketを使うので、nginxでその設定をするのも忘れないように。
-
-# 2. 本当はやりたいこと
-
-password とか、環境依存系は、環境変数で制御したい。
-
-# 3. フローチャート
+   ※websocket を使うので、nginx でその設定をするのも忘れないように。

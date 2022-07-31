@@ -188,14 +188,17 @@ func WebsocketMessages() {
 				for _, auth := range clients {
 					activeUserIDs = append(activeUserIDs, auth.UserID)
 				}
-				err := client.WriteJSON(echo.Map{
-					"command":         0,
-					"result":          0,
-					"active_user_ids": activeUserIDs})
-				if err != nil {
-					log.Printf("error: %v", err)
-					client.Close()
-					delete(clients, client)
+				if auth.UserID == res.APIMsg.UserID {
+					//コマンドを送信した人に送る
+					err := client.WriteJSON(echo.Map{
+						"command":         0,
+						"result":          0,
+						"active_user_ids": activeUserIDs})
+					if err != nil {
+						log.Printf("error: %v", err)
+						client.Close()
+						delete(clients, client)
+					}
 				}
 				break
 			case 1:
@@ -211,13 +214,13 @@ func WebsocketMessages() {
 				break
 			case 2:
 				//自分だったら送らない
-				if auth.UserID == res.APIMsg.UserID {
-
-				} else {
+				if auth.UserID == res.APIMsg.ToUserID {
 					err := client.WriteJSON(echo.Map{
-						"command":    2,
-						"result":     0,
-						"to_user_id": res.APIMsg.UserID,
+						"command":         2,
+						"result":          0,
+						"from_user_id":    res.APIMsg.UserID,
+						"to_user_id":      res.APIMsg.ToUserID,
+						"offer_or_answer": res.APIMsg.Text,
 					})
 					if err != nil {
 						log.Printf("error: %v", err)
