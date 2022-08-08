@@ -8,6 +8,22 @@ import { getDeviceStream } from '../../func';
 import { domain_db, http_protcol, ws_protcol } from '../../global';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
+import * as THREE from 'three';
+import { Canvas, useThree, useFrame, useLoader } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+
+function MyBox() {
+  const myMesh = React.useRef();
+  useFrame(({ clock }) => {
+    myMesh.current.rotation.x = clock.getElapsedTime();
+  });
+  return (
+    <mesh ref={myMesh}>
+      <boxGeometry />
+      <meshBasicMaterial color="royalblue" />
+    </mesh>
+  );
+}
 
 export default function Room(pageProps) {
   const router = useRouter();
@@ -383,8 +399,19 @@ export default function Room(pageProps) {
           <MyNav title={room.name} />
           <div className="m-4"></div>
 
-          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-slate-50 bg-opacity-40 pt-4 pb-40">
-            <button onClick={handleConnectBtnClicked}>接続</button>
+          <main className="flex flex-col items-center justify-start w-full h-full flex-1 container bg-slate-50 bg-opacity-40 pt-4 pb-40">
+            <button className="flex-none" onClick={handleConnectBtnClicked}>
+              接続
+            </button>
+            <div className="h-[60vh] w-full">
+              <Canvas camera={{ position: [0, 0, 5] }}>
+                <color attach="background" args={['rgba(255, 255, 255, 1)']} />
+                <ambientLight />
+                <pointLight color="white" intensity={0.1} position={[10, 10, 10]} />
+                <OrbitControls enableZoom={true} enablePan={true} enableRotate={true} />
+                <MyBox />
+              </Canvas>
+            </div>
           </main>
         </div>
       )}

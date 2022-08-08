@@ -6,8 +6,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
+ 
+make: *** No rule to make target `all'.  Stop.
 
-# Make data base, printed on Mon Jul 25 07:23:23 2022
+
+# Make data base, printed on Tue Aug  9 08:38:04 2022
 
 # Variables
 
@@ -15,6 +18,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 <D = $(patsubst %/,%,$(dir $<))
 # environment
 PIPENV_PYTHON = /Users/toshikinagahama/.pyenv/shims/python
+ 
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -24,7 +28,7 @@ LC_CTYPE = en_US.UTF-8
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-PLATFORMIO_IDE = 2.5.0
+PLATFORMIO_IDE = 2.5.1
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # automatic
@@ -88,7 +92,7 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # environment
-PLATFORMIO_PATH = /Users/toshikinagahama/.platformio/python3/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
+PLATFORMIO_PATH = /Users/toshikinagahama/.platformio/penv/bin:/Users/toshikinagahama/.platformio/penv:/Users/toshikinagahama/.platformio/python3/bin:/Users/toshikinagahama/.pyenv/shims/shims:/Users/toshikinagahama/.pyenv/shims:/Users/toshikinagahama/.cargo/bin:/Users/toshikinagahama/flutter/bin:/Users/toshikinagahama/go/bin:/Users/toshikinagahama/.goenv/shims:/Users/toshikinagahama/.goenv/bin:node_modules/.bin:/Users/toshikinagahama/.nodebrew/current/bin:/Users/toshikinagahama/.local/bin:/Users/toshikinagahama/bin:bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
 # default
 MAKE = $(MAKE_COMMAND)
 # default
@@ -139,6 +143,7 @@ __CF_USER_TEXT_ENCODING = 0x1F5:0x1:0xE
 COMMAND_MODE = unix2003
 # default
 MAKEFILES := 
+ 
 # automatic
 <F = $(notdir $<)
 # environment
@@ -170,9 +175,9 @@ VSCODE_PID = 10199
 
 # Directories
 
-# . (device 16777231, inode 22122666): 14 files, no impossibilities.
+# . (device 16777231, inode 22122666): 15 files, no impossibilities.
 
-# 14 files, no impossibilities in 1 directories.
+# 15 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -244,8 +249,6 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Mon Jul 25 07:23:23 2022
+# Finished Make data base on Tue Aug  9 08:38:04 2022
 
  
-make: *** No rule to make target `all'.  Stop.
-
