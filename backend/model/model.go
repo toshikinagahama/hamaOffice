@@ -8,19 +8,26 @@ import (
 	"gorm.io/gorm"
 )
 
+// JwtCustomClaims はログイン後のセッション用トークン。room_ids は含めない
+// (部屋への所属は都度 DB を見る。招待直後に再ログインなしで反映させるため)。
 type JwtCustomClaims struct {
-	ID      uuid.UUID   `json:"id" gorm:"type:uuid"`
-	Name    string      `json:"name"`
-	RoomIDs []uuid.UUID `json:"room_ids"` //room_idsもトークンに含む
+	ID   uuid.UUID `json:"id" gorm:"type:uuid"`
+	Name string    `json:"name"`
+	jwtv3.StandardClaims
+}
+
+// InviteClaims は部屋への招待リンク用の短命トークン。
+type InviteClaims struct {
+	RoomID uuid.UUID `json:"room_id" gorm:"type:uuid"`
 	jwtv3.StandardClaims
 }
 
 type Auth struct {
-	UserID  uuid.UUID   `json:"user_id" gorm:"type:uuid"`
-	RoomIDs []uuid.UUID `json:"room_ids"`
+	UserID uuid.UUID `json:"user_id" gorm:"type:uuid"`
 }
+
 type User struct {
-	ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	ID        uuid.UUID `gorm:"primaryKey;type:uuid"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
@@ -39,14 +46,16 @@ type APIUser struct {
 }
 
 type Room struct {
-	ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	ID        uuid.UUID `gorm:"primaryKey;type:uuid"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
 
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Icon     string `json:"icon" gorm:"size:100000; default:''"`
+	Name string `json:"name"`
+	Icon string `json:"icon" gorm:"size:100000; default:''"`
+	// MapData は障害物矩形の配列を JSON でシリアライズしたもの。
+	// 例: [{"x":0,"y":0,"w":40,"h":400}]
+	MapData  string `json:"map_data" gorm:"type:text; default:'[]'"`
 	Users    []User `json:"users" gorm:"many2many:user_rooms;"`
 	Messages []Message
 }
@@ -60,6 +69,7 @@ type APIRoom struct {
 	ID      uuid.UUID   `json:"id" gorm:"type:uuid"`
 	Name    string      `json:"name"`
 	Icon    string      `json:"icon"`
+	MapData string      `json:"map_data"`
 	UserIDs []uuid.UUID `json:"user_ids"`
 }
 
@@ -68,18 +78,25 @@ type Message struct {
 	Text      string    `json:"text"`
 	ReadCount uint      `json:"read_count"`
 	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid"`
-	ToUserID  uuid.UUID `json:"to_user_id" gorm:"type:uuid"`
 	RoomID    uuid.UUID `json:"room_id" gorm:"type:uuid"`
 }
 
 type APIMessage struct {
-	RoomID   uuid.UUID `json:"room_id"  gorm:"type:uuid"`
-	UserID   uuid.UUID `json:"user_id" gorm:"type:uuid"`
-	ToUserID uuid.UUID `json:"to_user_id" gorm:"type:uuid"`
-	Text     string    `json:"text"`
+	RoomID uuid.UUID `json:"room_id"  gorm:"type:uuid"`
+	UserID uuid.UUID `json:"user_id" gorm:"type:uuid"`
+	Text   string    `json:"text"`
 }
 
-type Res struct {
-	Command uint       `json:"command"`
-	APIMsg  APIMessage `json:"message"`
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if u.ID == uuid.Nil {
+		u.ID = uuid.New()
+	}
+	return
+}
+
+func (r *Room) BeforeCreate(tx *gorm.DB) (err error) {
+	if r.ID == uuid.Nil {
+		r.ID = uuid.New()
+	}
+	return
 }

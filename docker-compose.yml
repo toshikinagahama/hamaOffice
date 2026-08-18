@@ -1,28 +1,29 @@
 version: '3.7'
 
 services:
-  hamaofficeapp_database:
-    build:
-      context: ./database
-      dockerfile: Dockerfile
-    #image: hamaoffice_database
-    volumes:
-     - hamaoffice_db_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - PGTZ=${PGTZ}
-    restart: always
-
   hamaofficeapp_backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    #image: hamaofficeapp_backend
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
-      - 1324:1323
+      - 1325:1323
+    volumes:
+      - ./backend/data:/srv/data
+    env_file:
+      - .env
     restart: always
 
-volumes:
-  hamaoffice_db_data:
+  coturn:
+    image: coturn/coturn:4.6
+    network_mode: host
+    command: >
+      -n
+      --listening-port=3478
+      --fingerprint
+      --use-auth-secret
+      --static-auth-secret=${TURN_SECRET}
+      --realm=${TURN_REALM}
+      --min-port=49152
+      --max-port=49172
+      --no-cli
+    restart: always

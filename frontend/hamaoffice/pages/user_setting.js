@@ -6,8 +6,7 @@ import { userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { domain_db, domain, http_protcol, human_icon } from '../global';
-import QRCode from 'qrcode.react';
+import { domain_db, http_protcol, human_icon } from '../global';
 
 export default function UserSetting(pageProps) {
   const canvasRef = useRef();
@@ -34,9 +33,7 @@ export default function UserSetting(pageProps) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            room_ids: user.room_ids,
-          }),
+          body: JSON.stringify({}),
         }).catch(() => null);
         if (res != null) {
           const json_data = await res.json().catch(() => null);
@@ -276,13 +273,6 @@ export default function UserSetting(pageProps) {
                 </div>
               </div>
             </div>
-            <div>
-              <p>あなたのQRコード</p>
-              <div>
-                <QRCode value={`${http_protcol}://${domain}/add_user_to_room?id=${user.id}`} />
-              </div>
-            </div>
-            {/* <p>シークレットコード：1234</p> */}
           </main>
         </div>
       )}

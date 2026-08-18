@@ -6,14 +6,16 @@ import { userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { domain_db, http_protcol, human_icon } from '../global';
+import { domain_db, domain, http_protcol, human_icon } from '../global';
 import { MdMeetingRoom } from 'react-icons/md';
+import QRCode from 'qrcode.react';
 
 export default function User(pageProps) {
   const [user, setUser] = useRecoilState(userState);
 
   const [isFetchData, setIsFetchData] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [inviteUrl, setInviteUrl] = useState(null);
 
   useEffect(() => {
     if (user == null) {
@@ -29,9 +31,7 @@ export default function User(pageProps) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            room_ids: user.room_ids,
-          }),
+          body: JSON.stringify({}),
         }).catch(() => null);
         if (res != null) {
           const json_data = await res.json().catch(() => null);
@@ -62,6 +62,26 @@ export default function User(pageProps) {
     fetchData();
   }, [rooms, user]);
 
+  const handleInviteClick = async (e, room_id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${http_protcol}://${domain_db}/restricted/create_invite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ room_id }),
+    }).catch(() => null);
+    const json_data = await res.json().catch(() => null);
+    if (json_data && json_data.result === 0) {
+      setInviteUrl(`${http_protcol}://${domain}/join?invite_token=${json_data.invite_token}`);
+    } else {
+      alert('招待リンクの発行に失敗しました');
+    }
+  };
+
   return (
     <Auth>
       {user == null ? (
@@ -79,9 +99,12 @@ export default function User(pageProps) {
             <div className="m-4"></div>
             {rooms.map((room, index) => {
               return (
-                <Link href={'/room/' + room.id} key={index} className="mt-4">
-                  <a className="w-full">
-                    <div className="w-full text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40 py-4 flex mb-4">
+                <div
+                  key={index}
+                  className="w-full text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40 py-4 flex mb-4 mt-4"
+                >
+                  <Link href={'/room/' + room.id} className="flex-grow">
+                    <a className="flex-grow flex">
                       <div className="flex flex-col justify-center items-center w-16 h-16 shadow-lg rounded-full bg-slate-50 bg-opacity-20 mx-2">
                         <div className="flex flex-row justify-center items-center rounded-full">
                           <MdMeetingRoom size="2.5rem" />
@@ -89,28 +112,42 @@ export default function User(pageProps) {
                       </div>
                       <div className="flex-grow text-left px-4 py-2 flex flex-col justify-center">
                         <p className="text-md mb-1">{room.name}</p>
-                        <p className="text-gray-400 text-sm mt-1">{room.last_text}</p>
                       </div>
-                      <div className="px-4 py-2 flex flex-col justify-between">
-                        {/* <p className="text-sm mb-1">
-                          {`${('0' + room.last_update.getHours()).slice(-2)}:${(
-                            '0' + room.last_update.getMinutes()
-                          ).slice(-2)}`}
-                        </p>
-                        {room.num_unread != 0 && (
-                          <div className="rounded-full w-8 h-8 bg-green-500" key={room.id}>
-                            <div className="flex flex-col w-full h-full justify-center">
-                              <p className="text-sm text-white text-center">{room.num_unread}</p>
-                            </div>
-                          </div>
-                        )} */}
-                      </div>
-                    </div>
-                  </a>
-                </Link>
+                    </a>
+                  </Link>
+                  <button
+                    className="text-xs px-3 mr-4 rounded bg-white bg-opacity-90 shadow"
+                    onClick={(e) => handleInviteClick(e, room.id)}
+                  >
+                    招待
+                  </button>
+                </div>
               );
             })}
           </main>
+          {inviteUrl && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={() => setInviteUrl(null)}
+            >
+              <div
+                className="bg-white rounded-md p-6 flex flex-col items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="mb-4 text-sm text-gray-700">
+                  このQRコード/リンクは10分間有効です
+                </p>
+                <QRCode value={inviteUrl} />
+                <p className="mt-4 text-xs break-all max-w-xs text-gray-500">{inviteUrl}</p>
+                <button
+                  className="mt-4 text-sm px-4 py-2 bg-neutral-800 text-white rounded-md"
+                  onClick={() => setInviteUrl(null)}
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Auth>

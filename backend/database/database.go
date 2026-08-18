@@ -1,45 +1,42 @@
 package database
 
 import (
-	"fmt"
 	"hamaoffice/config"
 	"hamaoffice/model"
 
+	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 
+const sampleMapData = `[{"x":0,"y":0,"w":800,"h":20},{"x":0,"y":0,"w":20,"h":600},{"x":780,"y":0,"w":20,"h":600},{"x":0,"y":580,"w":800,"h":20},{"x":300,"y":200,"w":200,"h":30}]`
+
 func Init() {
-	// db, err = gorm.Open(sqlite.Open("chat.sqlite3"), &gorm.Config{})
 	cfg, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
-	var dsn = fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=disable TimeZone=Asia/Tokyo", cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost, cfg.DBPort)
-	db, err = gorm.Open(postgres.New(postgres.Config{
-		DSN:                  dsn,
-		PreferSimpleProtocol: true, // disables implicit prepared statement usage
-	}), &gorm.Config{})
+
+	// WAL モード: 同時読み書きの相互ブロックを避ける。
+	db, err = gorm.Open(sqlite.Open(cfg.DBPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-
-	//Enable to use uuid
-	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 
 	//Migrate
 	db.AutoMigrate(&model.User{})
 	db.AutoMigrate(&model.Room{})
 	db.AutoMigrate(&model.Message{})
+	db.AutoMigrate(&model.UserRoom{})
 
-	//Insert sample data
+	//Insert sample data (開発環境のみ)
+	if cfg.Environment != 0 {
+		return
+	}
 	{
 		var user model.User
-		//db.Unscoped().Delete(model.User{}, "id >= ?", 0)
-		//db.Unscoped().Delete(model.Room{}, "id >= ?", 0)
 		err = db.Where("name = ?", "test_user1").First(&user).Error
 		if err != nil {
 			password_byte := []byte("test_user1")
@@ -62,15 +59,7 @@ func Init() {
 		var room model.Room
 		err = db.Where("name = ?", "test_room1").First(&room).Error
 		if err != nil {
-			room := model.Room{Name: "test_room1", Password: "test_room1"}
-			db.Create(&room)
-		}
-	}
-	{
-		var room model.Room
-		err = db.Where("name = ?", "test_room2").First(&room).Error
-		if err != nil {
-			room := model.Room{Name: "test_room2", Password: "test_room2"}
+			room := model.Room{Name: "test_room1", MapData: sampleMapData}
 			db.Create(&room)
 		}
 	}
@@ -81,20 +70,10 @@ func Init() {
 			var room model.Room
 			err = db.Where("name = ?", "test_room1").First(&room).Error
 			if err == nil {
-				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				err = db.Create(&user_room).Error
-			}
-		}
-	}
-	{
-		var user model.User
-		err = db.Where("name = ?", "test_user1").First(&user).Error
-		if err == nil {
-			var room model.Room
-			err = db.Where("name = ?", "test_room2").First(&room).Error
-			if err == nil {
-				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				err = db.Create(&user_room).Error
+				var user_room model.UserRoom
+				if db.Where("user_id = ? AND room_id = ?", user.ID, room.ID).First(&user_room).Error != nil {
+					db.Create(&model.UserRoom{UserID: user.ID, RoomID: room.ID})
+				}
 			}
 		}
 	}
@@ -105,48 +84,13 @@ func Init() {
 			var room model.Room
 			err = db.Where("name = ?", "test_room1").First(&room).Error
 			if err == nil {
-				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				err = db.Create(&user_room).Error
+				var user_room model.UserRoom
+				if db.Where("user_id = ? AND room_id = ?", user.ID, room.ID).First(&user_room).Error != nil {
+					db.Create(&model.UserRoom{UserID: user.ID, RoomID: room.ID})
+				}
 			}
 		}
 	}
-	{
-		var user model.User
-		err = db.Where("name = ?", "test_user2").First(&user).Error
-		if err == nil {
-			var room model.Room
-			err = db.Where("name = ?", "test_room1").First(&room).Error
-			if err == nil {
-				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				err = db.Create(&user_room).Error
-			}
-		}
-	}
-	// {
-	// 	var user model.User
-	// 	err = db.Where("name = ?", "test_user1").First(&user).Error
-	// 	if err == nil {
-	// 		var room model.Room
-	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
-	// 		if err == nil {
-	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Text: "hello from test_user1", ReadCount: 0}
-	// 			db.Create(&message)
-	// 		}
-	// 	}
-	// }
-	// {
-	// 	var user model.User
-	// 	err = db.Where("name = ?", "test_user2").First(&user).Error
-	// 	if err == nil {
-	// 		var room model.Room
-	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
-	// 		if err == nil {
-	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Text: "hello from test_user2", ReadCount: 0}
-	// 			db.Create(&message)
-	// 		}
-	// 	}
-	// }
-
 }
 
 func GetDB() *gorm.DB {

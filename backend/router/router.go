@@ -27,7 +27,6 @@ func NewRouter() (*echo.Echo, error) {
 		router.File(cfg.BasePath+"/web", cfg.StaticPath+"/index.html")
 		router.File(cfg.BasePath+"/web/user", cfg.StaticPath+"/user.html")
 		router.File(cfg.BasePath+"/web/room/*", cfg.StaticPath+"/room/[id].html")
-		router.File(cfg.BasePath+"/web/add_user_to_room", cfg.StaticPath+"/add_user_to_room.html")
 		router.File(cfg.BasePath+"/web/create_room", cfg.StaticPath+"/create_room.html")
 		router.File(cfg.BasePath+"/web/signup", cfg.StaticPath+"/signup.html")
 		router.File(cfg.BasePath+"/web/user_setting", cfg.StaticPath+"/user_setting.html")
@@ -37,26 +36,26 @@ func NewRouter() (*echo.Echo, error) {
 	}
 
 	router.GET(cfg.BasePath+"/backend/ws", handler.Websocket)
-	go handler.WebsocketMessages()
 
 	router.POST(cfg.BasePath+"/backend/login", handler.Login)
 	router.POST(cfg.BasePath+"/backend/signup", handler.Signup)
 	router_group := router.Group(cfg.BasePath + "/backend/restricted")
 
-	config := middleware.JWTConfig{
+	jwt_config := middleware.JWTConfig{
 		Claims:     &model.JwtCustomClaims{},
 		SigningKey: []byte(cfg.SercretKey),
 	}
 
-	router_group.Use(middleware.JWTWithConfig(config))
+	router_group.Use(middleware.JWTWithConfig(jwt_config))
 	router_group.GET("/auth_user", handler.GetAuthenticatedUser)
 	router_group.POST("/get_roomusers", handler.GetRoomUsers)
 	router_group.POST("/get_rooms", handler.GetRooms)
 	router_group.POST("/get_messages", handler.GetMessages)
 	router_group.POST("/create_room", handler.CreateRoom)
-	router_group.POST("/add_user_to_room", handler.AddUserToRoom)
+	router_group.POST("/create_invite", handler.CreateInvite)
+	router_group.POST("/join_room", handler.JoinRoom)
 	router_group.POST("/update_user", handler.UpdateUser)
+	router_group.GET("/turn_credential", handler.TurnCredential)
 
 	return router, nil
-
 }

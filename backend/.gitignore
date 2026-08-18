@@ -2,3 +2,7 @@
 /bin/
 /tmp/
 .env
+*.db
+*.db-shm
+*.db-wal
+/data/

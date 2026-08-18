@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"hamaoffice/config"
 	"hamaoffice/database"
 	"hamaoffice/router"
@@ -18,5 +19,10 @@ func main() {
 	database.Init()
 	defer database.Close()
 	router, _ := router.NewRouter()
-	router.Logger.Fatal(router.Start(":1323"))
+	addr := fmt.Sprintf(":%d", cfg.Port)
+	if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
+		router.Logger.Fatal(router.StartTLS(addr, cfg.TLSCertFile, cfg.TLSKeyFile))
+	} else {
+		router.Logger.Fatal(router.Start(addr))
+	}
 }

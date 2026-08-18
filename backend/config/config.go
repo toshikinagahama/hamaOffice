@@ -11,15 +11,22 @@ import (
 // マッピング用の構造体
 type Config struct {
 	Version     string `yaml:"version"`
-	DBUser      string `yaml:"dbuser"`
-	DBPassword  string `yaml:"dbpassword"`
-	DBName      string `yaml:"dbname"`
-	DBHost      string `yaml:"dbhost"`
-	DBPort      uint   `yaml:"dbport"`
+	Port        uint   `yaml:"port"`
+	DBPath      string `yaml:"dbpath"`
 	SercretKey  string `yaml:"sercretkey"`
 	StaticPath  string `yaml:"staticpath"`
 	BasePath    string `yaml:"basepath"`
 	Environment uint   `yaml:"environment"`
+
+	// TURN (coturn REST API / use-auth-secret 方式) 用設定。
+	TurnSecret string   `yaml:"turnsecret"`
+	TurnRealm  string   `yaml:"turnrealm"`
+	TurnURLs   []string `yaml:"turnurls"`
+
+	// 両方指定されていれば TLS で起動する(開発時に getUserMedia の
+	// Secure Context 制約を LAN 内で満たすため等)。
+	TLSCertFile string `yaml:"tlscertfile"`
+	TLSKeyFile  string `yaml:"tlskeyfile"`
 }
 
 func Load() (*Config, error) {
@@ -37,6 +44,6 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal error- %s", err)
 	}
-	log.Println(cfg.DBUser)
+	log.Println(cfg.DBPath)
 	return &cfg, nil
 }

@@ -10,7 +10,6 @@ import MyNav from '../components/nav';
 export default function User(pageProps) {
   const router = useRouter();
   const [roomname, setRoomname] = useState('');
-  const [sercret_key, setSercret_key] = useState('');
 
   useEffect(async () => {}, []);
 
@@ -18,16 +17,9 @@ export default function User(pageProps) {
     setRoomname(e.target.value);
   };
 
-  const handleSercret_keyChange = (e) => {
-    setSercret_key(e.target.value);
-  };
-
   const handleSubmitBtnClick = async (e) => {
     if (roomname != '') {
-      const input_info = {
-        roomname,
-        sercret_key,
-      };
+      const input_info = { roomname };
       const token = localStorage.getItem('token');
       const res = await fetch(`${http_protcol}://${domain_db}/restricted/create_room`, {
         method: 'POST',
@@ -38,12 +30,9 @@ export default function User(pageProps) {
         body: JSON.stringify(input_info),
       }).catch(() => null);
       const json_data = await res.json().catch(() => null);
-      console.log(json_data);
       const result = json_data['result'];
       if (result == 0) {
-        alert('登録完了しました。お手数ですが、再度ログインし直してください。');
-        localStorage.setItem('token', null);
-        router.push('/user');
+        router.push(`/room/${json_data['room_id']}`);
       } else {
         alert(`Result: ${result}`);
       }
@@ -71,13 +60,6 @@ export default function User(pageProps) {
               className="block border border-grey-light w-full p-3 rounded mb-4"
               placeholder="Room name"
               onChange={handleRoomnameChange}
-            />
-
-            <input
-              type="password"
-              className="block border border-grey-light w-full p-3 rounded mb-4"
-              placeholder="Sercret Key"
-              onChange={handleSercret_keyChange}
             />
 
             <button
