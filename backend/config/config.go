@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -44,6 +45,13 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal error- %s", err)
 	}
+
+	// TurnURLs はスライスなので AutomaticEnv 経由では来ない。
+	// カンマ区切りの環境変数で上書きできるようにしておく。
+	if v := os.Getenv("TURNURLS"); v != "" {
+		cfg.TurnURLs = strings.Split(v, ",")
+	}
+
 	log.Println(cfg.DBPath)
 	return &cfg, nil
 }
