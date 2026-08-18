@@ -53,7 +53,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids i-08ccc813355a600fb \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["sudo -u exevolute bash /home/exevolute/hamaOffice/deploy.sh"]' \
+            --parameters 'commands=["cd /home/exevolute/hamaOffice && sudo -u exevolute git pull origin main","sudo -u exevolute bash /home/exevolute/hamaOffice/deploy.sh"]' \
             --timeout-seconds 300 \
             --query "Command.CommandId" --output text)
           echo "CommandId: $COMMAND_ID"
