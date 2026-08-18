@@ -1,0 +1,17 @@
+version: "0.0.1"
+#開発環境
+port: 1323
+dbpath: "hamaoffice.db"
+sercretkey: "test"
+staticpath: "./out"
+basepath: "/hamaoffice"
+environment: 0 #開発環境 -> 0  本番環境 -> 1
+
+turnsecret: "test_turn_secret"
+turnrealm: "hamaoffice"
+turnurls:
+  - "stun:localhost:3478"
+  - "turn:localhost:3478"
+
+tlscertfile: ""
+tlskeyfile: ""
