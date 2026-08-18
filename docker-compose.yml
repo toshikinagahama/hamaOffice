@@ -10,7 +10,7 @@ services:
     volumes:
       - ./backend/data:/srv/data
     env_file:
-      - .env
+      - ./backend/.env
     restart: always
 
   coturn:
