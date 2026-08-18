@@ -8,6 +8,7 @@
 # ここで git pull すると、実行中の bash がこのファイル自身の書き換えで
 # 読み取り位置がズレ、以降の行を取りこぼす場合があるため。
 set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
 cd "$(dirname "$0")"
 
 echo "=== download build artifact from S3 ==="
